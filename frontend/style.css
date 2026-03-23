@@ -1,0 +1,25 @@
+body { background:#f5f7fb; }
+
+.chat-box {
+  height:400px;
+  overflow-y:auto;
+  background:#fff;
+  padding:10px;
+  border-radius:10px;
+}
+
+.message {
+  padding:8px;
+  margin:5px;
+  border-radius:10px;
+}
+
+.me {
+  background:#0d6efd;
+  color:#fff;
+  text-align:right;
+}
+
+.other {
+  background:#e9ecef;
+}
