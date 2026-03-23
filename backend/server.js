@@ -5,6 +5,7 @@ const http = require("http");
 const { Server } = require("socket.io");
 const mysql = require("mysql2");
 const cors = require("cors");
+const path = require("path");
 
 const app = express();
 const server = http.createServer(app);
@@ -12,21 +13,26 @@ const server = http.createServer(app);
 app.use(cors());
 app.use(express.json());
 
+// ✅ Serve frontend (for deployment)
+app.use(express.static(path.join(__dirname, "public")));
+
 const io = new Server(server, {
   cors: { origin: "*" }
 });
 
-// ✅ DB CONNECTION (UTF8 FIX)
+// ======================
+// ✅ DATABASE CONNECTION
+// ======================
 const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "chat_app",
+  host: process.env.DB_HOST || "localhost",
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASS || "",
+  database: process.env.DB_NAME || "chat_app",
   charset: "utf8mb4"
 });
 
 db.connect(err => {
-  if (err) console.log(err);
+  if (err) console.log("DB ERROR:", err);
   else console.log("DB Connected");
 });
 
@@ -89,13 +95,13 @@ app.get("/users", (req, res) => {
 
 
 // ======================
-// 🔌 SOCKET
+// 🔌 SOCKET.IO
 // ======================
 io.on("connection", (socket) => {
 
   socket.on("user_online", (username) => {
     db.query("UPDATE users SET is_online=1 WHERE username=?", [username]);
-    io.emit("user_online", username);
+    io.emit("refresh_users");
   });
 
   socket.on("send_message", (data) => {
@@ -117,6 +123,12 @@ io.on("connection", (socket) => {
 
 });
 
-server.listen(5000, () => {
-  console.log("Server running on port 5000");
+
+// ======================
+// 🚀 START SERVER (ONLY ONCE)
+// ======================
+const PORT = process.env.PORT || 5000;
+
+server.listen(PORT, () => {
+  console.log("Server running on port " + PORT);
 });
